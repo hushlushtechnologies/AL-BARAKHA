@@ -1,26 +1,220 @@
-@import "tailwindcss";
+ @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ─────────────────────────────────────────────
+   Design tokens → Tailwind utilities
+   (bg-brand, text-primary, text-ink, font-display…)
+   ───────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts (loaded via next/font in layout.tsx) */
+  --font-display: var(--font-pathway);
+  --font-sans: var(--font-pathway);
+
+  /* Display heading: 60px, line-height 100% (scales down on mobile) */
+  --text-display: clamp(2.5rem, 4vw + 1rem, 3.75rem);
+  --text-display--line-height: 1;
+  --text-display--font-weight: 600;
+
+  /* Section heading */
+  --text-h2: clamp(2rem, 1.5vw + 1.4rem, 2.75rem);
+  --text-h2--line-height: 1.25;
+  --text-h2--font-weight: 600;
+    --color-surface: #07100c;       /* Figma: Surface */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Surfaces */
+  --color-ink: #010403;           /* page background + dark text */
+  --color-gold-surface: #121200;  /* gold badge background */
+
+  /* Brand greens */
+  --color-brand: #105646;
+  --color-brand-light: #33b082;
+  --color-brand-glow: #23e29b;
+  --color-brand-deep: #0b5b46;
+  --color-brand-mid: #347658;
+  --color-brand-dark: #07100c;
+
+  /* Text */
+  --color-primary: #f5f4ed;
+  --color-muted: #71847b;
+  --color-secondary: #d9ded7;
+  --color-surface: #07100c;       /* Figma: Surface */
+  /* Accent */
+  --color-gold: #ebb811;
+
+  /* Layout */
+  --container-site: 1280px;
+  --spacing-header: 75px;
+
+  /* Motion (matches lib/motion.ts) */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────── */
+@layer base {
+  html {
+    background: var(--color-ink);
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--color-ink);
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-brand-light);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-light);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  img,
+  video {
+    display: block;
+    max-width: 100%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─────────────────────────────────────────────
+   Reusable components (from Figma)
+   ───────────────────────────────────────────── */
+
+/* Centered 1280px container with responsive side padding */
+@utility container-site {
+  width: 100%;
+  max-width: var(--container-site);
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 0;
+  }
+}
+
+/* Primary green button */
+@utility btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #105646;
+  color: #ffffff;
+  border-bottom: 3px solid #33b082;
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 -6px 12px 0 #23e29b99,
+    inset 0 2px 4px 0 #0b5b46;
+  font-weight: 500;
+  transition:
+    translate 0.4s var(--ease-premium),
+    box-shadow 0.4s var(--ease-premium),
+    filter 0.4s var(--ease-premium);
+
+  &:hover {
+    translate: 0 -2px;
+    filter: brightness(1.08);
+    box-shadow:
+      inset 0 -8px 16px 0 #23e29bbf,
+      inset 0 2px 4px 0 #0b5b46,
+      0 10px 30px -10px rgb(35 226 155 / 0.45);
+  }
+
+  &:active {
+    translate: 0 0;
+  }
+}
+
+/* Outline button */
+@utility btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--color-secondary);
+  border: 1px solid var(--color-secondary);
+  border-radius: 9999px;
+  font-weight: 500;
+  transition:
+    background-color 0.5s var(--ease-premium),
+    color 0.5s var(--ease-premium),
+    translate 0.5s var(--ease-premium);
+
+  &:hover {
+    background: var(--color-secondary);
+    color: var(--color-ink);
+    translate: 0 -2px;
+  }
+}
+
+/* Gold pill / badge */
+@utility badge-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-gold-surface);
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  border-radius: 9999px;
+}
+
+/* Radial glass card */
+@utility surface-radial {
+  background: radial-gradient(
+    102.26% 46.5% at 78.11% 14.5%,
+    rgb(7 16 12 / 0.4) 0%,
+    rgb(52 118 88 / 0.4) 99.29%
+  );
+}
+
+/* Linear gradient section/card */
+@utility surface-linear {
+  background:
+    linear-gradient(262.25deg, rgb(52 118 88 / 0.4) 1.45%, rgb(7 16 12 / 0.4) 100%),
+    var(--color-ink);
+}
+
+/* ─────────────────────────────────────────────
+   Lenis smooth scroll (required styles)
+   ───────────────────────────────────────────── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────
+   Respect reduced-motion settings
+   ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
