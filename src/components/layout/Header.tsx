@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -7,11 +7,10 @@ import { useCallback, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useLenis } from "lenis/react";
 import { navLinks, ctaLink } from "@/lib/site";
- 
-import { ArrowRight } from "@/components/ui/icons";
 import { ease } from "@/lib/motion";
+import { useActiveSection } from "@/lib/use-active-section";
+import { ArrowRight } from "@/components/ui/icons";
 import { MobileMenu } from "./MobileMenu";
- 
 
 const HEADER_OFFSET = -110; // keeps section titles clear of the fixed header
 
@@ -32,13 +31,22 @@ export function Header() {
     setHidden(y > prev && y > 160);
   });
 
+  // Scroll-spy: which Home section is in view (only tracked on the Home page)
+  const activeSection = useActiveSection(["opportunities", "services"], pathname === "/");
+
   const isActive = useCallback(
     (href: string) => {
-      if (href.includes("#")) return false;
-      if (href === "/") return pathname === "/";
+      const [path, hash] = href.split("#");
+
+      // Section links: active while that section is in view on its page
+      if (hash) return pathname === (path || "/") && activeSection === hash;
+
+      // Home: active on "/" only when no tracked section is in view
+      if (href === "/") return pathname === "/" && !activeSection;
+
       return pathname.startsWith(href);
     },
-    [pathname]
+    [pathname, activeSection]
   );
 
   // Smooth-scroll to sections when already on the right page
@@ -68,9 +76,9 @@ export function Header() {
         {/* Dark fade behind the header once scrolled */}
         <div
           aria-hidden="true"
-       className={`pointer-events-none absolute inset-0 -bottom-10 bg-linear-to-b from-ink via-ink/80 to-transparent transition-opacity duration-500 ${
-  scrolled && !menuOpen ? "opacity-100" : "opacity-0"
-}`}
+          className={`pointer-events-none absolute inset-0 -bottom-10 bg-linear-to-b from-ink via-ink/80 to-transparent transition-opacity duration-500 ${
+            scrolled && !menuOpen ? "opacity-100" : "opacity-0"
+          }`}
         />
 
         <div
@@ -78,23 +86,33 @@ export function Header() {
             scrolled ? "py-4" : "pb-4 pt-6 lg:pt-12 2xl:pt-[75px]"
           }`}
         >
-          {/* Logo */}
+          {/* Logo: crest image + real-text tagline (always crisp and readable) */}
           <Link
             href="/"
             onClick={(e) => handleNavigate(e, "/")}
-            aria-label="Afaq, go to homepage"
-            className="relative shrink-0"
+            aria-label="Afaq Al Barakha Investment, go to homepage"
+            className="relative flex shrink-0 flex-col items-center"
           >
             <Image
-              src="/logo.png"
-              alt="Afaq Albarakha Investment"
-              width={142}
-              height={75}
+              src="/logo-mark.svg"
+              alt=""
+              width={60}
+              height={58}
               priority
+              unoptimized
               className={`h-auto transition-[width] duration-500 ease-premium ${
-                scrolled ? "w-[100px] lg:w-[115px]" : "w-[110px] lg:w-[142px]"
+                scrolled ? "w-[44px] lg:w-[50px]" : "w-[50px] lg:w-[60px]"
               }`}
             />
+            <span
+              className={`mt-1 whitespace-nowrap bg-[linear-gradient(90deg,#C78811_0.02%,#F5D124_61.61%,#C58510_123.21%)] bg-clip-text font-serif font-semibold uppercase leading-none text-transparent transition-[font-size,letter-spacing] duration-500 ease-premium ${
+                scrolled
+                  ? "text-[6.5px] tracking-[0.24em] lg:text-[7px]"
+                  : "text-[7px] tracking-[0.26em] lg:text-[8px]"
+              }`}
+            >
+              Albarakha Investment
+            </span>
           </Link>
 
           {/* Desktop navigation */}
@@ -103,7 +121,7 @@ export function Header() {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.15, ease: ease.out }}
-          className="hidden items-center rounded-full border border-white/[0.06] bg-surface p-1.5 backdrop-blur-xl lg:flex"
+            className="hidden items-center rounded-full border border-white/[0.06] bg-surface p-1.5 backdrop-blur-xl lg:flex"
           >
             <ul className="flex items-center" onMouseLeave={() => setHovered(null)}>
               {navLinks.map((link, i) => {

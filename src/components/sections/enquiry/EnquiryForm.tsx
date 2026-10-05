@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ease, fadeUp, stagger } from "@/lib/motion";
 import { enquirySchema, type Enquiry } from "@/lib/enquiry-schema";
 import { serviceOptions } from "@/lib/site";
+import { findCountry, otherCountries, priorityCountries } from "@/lib/countries";
 import { ChevronDown, Spinner } from "@/components/ui/icons";
 
 const fieldClass =
@@ -25,12 +26,22 @@ export function EnquiryForm() {
     formState: { errors, isSubmitting },
   } = useForm<Enquiry>({
     resolver: zodResolver(enquirySchema),
-    defaultValues: { name: "", email: "", phone: "", service: "", message: "", website: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      country: "AE",
+      phone: "",
+      service: "",
+      message: "",
+      website: "",
+    },
   });
 
   const serviceValue = watch("service");
+  const countryValue = watch("country");
+  const selectedCountry = findCountry(countryValue);
 
-   const onSubmit = async (values: Enquiry) => {
+  const onSubmit = async (values: Enquiry) => {
     setStatus("idle");
     try {
       const res = await fetch("/api/enquiry", {
@@ -41,7 +52,6 @@ export function EnquiryForm() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        // Shows Resend's exact reason in the browser console (development only)
         if (process.env.NODE_ENV === "development") {
           console.error("Enquiry failed:", data.detail ?? data.error ?? res.status);
         }
@@ -54,6 +64,9 @@ export function EnquiryForm() {
       setStatus("error");
     }
   };
+
+  const phoneError = errors.phone?.message ?? errors.country?.message;
+
   return (
     <AnimatePresence mode="wait">
       {status === "success" ? (
@@ -69,12 +82,13 @@ export function EnquiryForm() {
           exit={{ opacity: 0, y: -20, transition: { duration: 0.4 } }}
           className="flex flex-col gap-7"
         >
-          <Field id="name" label="Full Name" error={errors.name?.message}>
+          <Field id="name" label="Full Name" required error={errors.name?.message}>
             <input
               id="name"
               type="text"
               autoComplete="name"
               placeholder="Enter your full name"
+              aria-required="true"
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "name-error" : undefined}
               className={`${fieldClass} h-[63px]`}
@@ -82,12 +96,13 @@ export function EnquiryForm() {
             />
           </Field>
 
-          <Field id="email" label="Email Address" error={errors.email?.message}>
+          <Field id="email" label="Email Address" required error={errors.email?.message}>
             <input
               id="email"
               type="email"
               autoComplete="email"
               placeholder="Enter your email address"
+              aria-required="true"
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? "email-error" : undefined}
               className={`${fieldClass} h-[63px]`}
@@ -95,23 +110,62 @@ export function EnquiryForm() {
             />
           </Field>
 
-          <Field id="phone" label="Phone Number" error={errors.phone?.message}>
-            <input
-              id="phone"
-              type="tel"
-              autoComplete="tel"
-              placeholder="Enter your phone number"
-              aria-invalid={!!errors.phone}
-              aria-describedby={errors.phone ? "phone-error" : undefined}
-              className={`${fieldClass} h-[63px]`}
-              {...register("phone")}
-            />
+          <Field id="phone" label="Phone Number" required error={phoneError}>
+            <div className="flex gap-3">
+              {/* Country code: real <select> for accessibility, styled display on top */}
+              <div className="relative w-[132px] shrink-0">
+                <select
+                  id="country"
+                  aria-label="Country code"
+                  aria-required="true"
+                  autoComplete="tel-country-code"
+                  className="peer absolute inset-0 z-10 w-full cursor-pointer opacity-0 [&>option]:bg-[#0b221a] [&>option]:text-primary"
+                  {...register("country")}
+                >
+                  {priorityCountries.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name} ({c.dial})
+                    </option>
+                  ))}
+                  <option disabled>──────────</option>
+                  {otherCountries.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name} ({c.dial})
+                    </option>
+                  ))}
+                </select>
+                <div
+                  aria-hidden="true"
+                  className={`${fieldClass} flex h-[63px] items-center justify-between gap-2 px-4 peer-hover:border-white/15 peer-focus-visible:border-brand-light/60 peer-focus-visible:shadow-[0_0_0_4px_rgb(51_176_130/0.15),0_0_30px_-8px_rgb(35_226_155/0.5)]`}
+                >
+                  <span className="text-[12px] font-semibold tracking-wider text-primary/55">
+                    {selectedCountry?.code}
+                  </span>
+                  <span className="tabular-nums">{selectedCountry?.dial}</span>
+                  <ChevronDown className="size-4 shrink-0 text-brand-light" />
+                </div>
+              </div>
+
+              <input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel-national"
+                placeholder="Phone number"
+                aria-required="true"
+                aria-invalid={!!errors.phone}
+                aria-describedby={phoneError ? "phone-error" : undefined}
+                className={`${fieldClass} h-[63px] min-w-0 flex-1`}
+                {...register("phone")}
+              />
+            </div>
           </Field>
 
-          <Field id="service" label="Service Interested In" error={errors.service?.message}>
+          <Field id="service" label="Service Interested In" required error={errors.service?.message}>
             <div className="relative">
               <select
                 id="service"
+                aria-required="true"
                 aria-invalid={!!errors.service}
                 aria-describedby={errors.service ? "service-error" : undefined}
                 className={`${fieldClass} h-[63px] cursor-pointer appearance-none pr-14 [&>option]:bg-[#0b221a] [&>option]:text-primary ${
@@ -132,7 +186,7 @@ export function EnquiryForm() {
             </div>
           </Field>
 
-          <Field id="message" label="Message" error={errors.message?.message}>
+          <Field id="message" label="Message" optional error={errors.message?.message}>
             <textarea
               id="message"
               rows={5}
@@ -154,11 +208,15 @@ export function EnquiryForm() {
             {...register("website")}
           />
 
-          <motion.div variants={fadeUp} className="mt-3">
+          <motion.div variants={fadeUp} className="mt-1">
+            <p className="mb-4 text-sm text-primary/55">
+              <span className="text-brand-light">*</span> Required fields
+            </p>
+
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-primary h-[42px] w-full px-6 disabled:cursor-wait disabled:opacity-80"
+              className="btn-primary h-[42px] w-full cursor-pointer px-6 disabled:cursor-wait disabled:opacity-80"
             >
               {isSubmitting ? (
                 <>
@@ -195,11 +253,15 @@ export function EnquiryForm() {
 function Field({
   id,
   label,
+  required,
+  optional,
   error,
   children,
 }: {
   id: string;
   label: string;
+  required?: boolean;
+  optional?: boolean;
   error?: string;
   children: React.ReactNode;
 }) {
@@ -207,6 +269,12 @@ function Field({
     <motion.div variants={fadeUp}>
       <label htmlFor={id} className="text-lg font-medium text-primary">
         {label}
+        {required && (
+          <span aria-hidden="true" className="ml-1 text-brand-light">
+            *
+          </span>
+        )}
+        {optional && <span className="ml-2 text-sm font-normal text-primary/45">(optional)</span>}
       </label>
       <div className="mt-3">{children}</div>
       <AnimatePresence>
@@ -257,7 +325,7 @@ function SuccessPanel({ onReset }: { onReset: () => void }) {
         Your enquiry has been received. One of our advisors will contact you shortly to schedule your
         consultation.
       </p>
-      <button type="button" onClick={onReset} className="btn-outline mt-8 px-6 py-3">
+      <button type="button" onClick={onReset} className="btn-outline mt-8 cursor-pointer px-6 py-3">
         Send another enquiry
       </button>
     </motion.div>

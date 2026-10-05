@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import Link from "next/link";
 import { useEffect } from "react";
@@ -43,12 +43,22 @@ export function MobileMenu({ open, onClose, onNavigate, isActive }: Props) {
           animate={{ clipPath: "inset(0 0 0% 0)" }}
           exit={{ clipPath: "inset(0 0 100% 0)" }}
           transition={{ duration: 0.7, ease: ease.inOut }}
-          className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-base px-6 pb-10 pt-32 lg:hidden"
+          className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-ink px-6 pb-10 pt-32 lg:hidden"
         >
+          {/* Brand gradient: deep green at the top fading into ink */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#07100c_0%,#0a2219_45%,#010403_100%)]"
+          />
+
           {/* Ambient glow */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -right-32 top-1/4 size-96 rounded-full bg-brand-mid/30 blur-[120px]"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-24 bottom-0 size-80 rounded-full bg-brand/40 blur-[120px]"
           />
 
           <nav aria-label="Mobile" className="relative">

@@ -67,15 +67,25 @@ export function Footer() {
       >
         <div className="xl:px-16">
           {/* Brand */}
+           {/* Brand: crest image + real-text tagline */}
           <Reveal>
-            <Link href="/" onClick={(e) => onNavigate(e, "/")} aria-label="Afaq, go to homepage" className="inline-block">
+            <Link
+              href="/"
+              onClick={(e) => onNavigate(e, "/")}
+              aria-label="Afaq Al Barakha Investment, go to homepage"
+              className="inline-flex flex-col items-center"
+            >
               <Image
-                src="/logo.png"
-                alt="Afaq Al Barakha Investment"
-                width={180}
-                height={106}
-                className="h-auto w-[150px] xl:w-[180px]"
+                src="/logo-mark.svg"
+                alt=""
+                width={76}
+                height={74}
+                unoptimized
+                className="h-auto w-[64px] xl:w-[76px]"
               />
+              <span className="mt-1.5 whitespace-nowrap bg-[linear-gradient(90deg,#C78811_0.02%,#F5D124_61.61%,#C58510_123.21%)] bg-clip-text font-serif text-[9px] font-semibold uppercase leading-none tracking-[0.26em] text-transparent xl:text-[10px]">
+                Albarakha Investment
+              </span>
             </Link>
           </Reveal>
 

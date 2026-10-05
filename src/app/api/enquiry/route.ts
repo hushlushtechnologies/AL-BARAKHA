@@ -1,6 +1,7 @@
  import { NextResponse } from "next/server";
 import { enquirySchema } from "@/lib/enquiry-schema";
 import { buildEnquiryEmail } from "@/lib/emails/enquiry-email";
+import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -19,7 +20,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Please check the form and try again." }, { status: 400 });
   }
 
-  const { website: _honeypot, ...data } = parsed.data;
+  const { website: _honeypot, ...rest } = parsed.data;
+
+  // Store the phone in international format, e.g. +971 50 123 4567
+  const formattedPhone =
+    parsePhoneNumberFromString(rest.phone, rest.country as CountryCode)?.formatInternational() ?? rest.phone;
+
+  const data = { ...rest, phone: formattedPhone };
 
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.ENQUIRY_TO_EMAIL;
